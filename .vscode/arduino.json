@@ -1,0 +1,6 @@
+{
+    "board": "arduino:samd:mkrzero",
+    "port": "COM4",
+    "programmer": "arduino:atmel_ice",
+    "sketch": "lights.ino"
+}
