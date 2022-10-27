@@ -1,11 +1,11 @@
 #include <FastLED.h>
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
-int brightness = 8;
-int counter = 0;
-int current_program = 0;
-int program_parameter_x = 0;
-int program_parameter_y = 0;
-int verbosity = 0;
+static int brightness = 20;
+static int counter = 0;
+static int current_program = 0;
+static int program_parameter_x = 2;
+static int program_parameter_y = 2;
+static int verbosity = 0;
 
 #pragma region PhysicalSegment
 
@@ -27,7 +27,7 @@ CRGB fairy_segment_leds[num_fairy_segment_leds];
 PhysicalSegment strip_segment = {num_strip_segment_leds, strip_segment_leds, &FastLED.addLeds<WS2811, 7, BRG>(strip_segment_leds, num_strip_segment_leds), "strip"};  // strip 1*100
 PhysicalSegment dual_segment = {num_dual_segment_leds, dual_segment_leds, &FastLED.addLeds<WS2811, 8, BRG>(dual_segment_leds, num_dual_segment_leds),
                                 "dual"};  // fairy 2x50 + strip 2*100 + 56
-PhysicalSegment fairy_segment = {num_fairy_segment_leds, fairy_segment_leds, &FastLED.addLeds<WS2811, 10, RGB>(fairy_segment_leds, num_fairy_segment_leds), "fairy"};  // fairy 8*50
+PhysicalSegment fairy_segment = {num_fairy_segment_leds, fairy_segment_leds, &FastLED.addLeds<WS2811, 9, RGB>(fairy_segment_leds, num_fairy_segment_leds), "fairy"};  // fairy 8*50
 PhysicalSegment physical_segments[num_physical_segments] = {strip_segment, dual_segment, fairy_segment};
 
 #pragma endregion PhysicalSegment
@@ -36,28 +36,50 @@ PhysicalSegment physical_segments[num_physical_segments] = {strip_segment, dual_
 
 // these map to some region of a physical segment, these are elemental and do not overlap
 struct LogicalSegment {
+  LogicalSegment(PhysicalSegment *physical_segment, int start, int end, bool pixel_shift = false) : physical_segment(physical_segment), start(start), end(end), pixel_shift(pixel_shift) {}
   PhysicalSegment *physical_segment;
   int start;
   int end;
   bool pixel_shift;
-  const char *name;
+  // CRGB color_shift;
+  // bool color_shift_up;
 };
 
-LogicalSegment strip_segment_up = {&strip_segment, 0, 40, false, "strip_segment_up"};
-LogicalSegment strip_segment_over = {&strip_segment, 40, num_strip_segment_leds, false, "strip_segment_over"};
-LogicalSegment dual_segment_up = {&dual_segment, 0, 32, true, "dual_segment_up"};
-LogicalSegment dual_segment_window = {&dual_segment, 32, 100, true, "dual_segment_window"};
-LogicalSegment dual_segment_right_corner = {&dual_segment, 100, 117, false, "dual_segment_right_corner"};
-LogicalSegment dual_segment_back_ceiling = {&dual_segment, 117, 197, false, "dual_segment_back_ceiling"};
-LogicalSegment dual_segment_left_ceiling = {&dual_segment, 197, 274, false, "dual_segment_left_ceiling"};
-LogicalSegment dual_segment_front_ceiling = {&dual_segment, 274, num_dual_segment_leds, false, "dual_segment_front_ceiling"};
-LogicalSegment fairy_segment_up = {&fairy_segment, 0, 26, false, "fairy_segment_up"};
-LogicalSegment fairy_segment_1 = {&fairy_segment, 26, 87, false, "fairy_segment_1"};
-LogicalSegment fairy_segment_2 = {&fairy_segment, 87, 148, false, "fairy_segment_2"};
-LogicalSegment fairy_segment_3 = {&fairy_segment, 148, 210, false, "fairy_segment_3"};
-LogicalSegment fairy_segment_4 = {&fairy_segment, 210, 272, false, "fairy_segment_4"};
-LogicalSegment fairy_segment_5 = {&fairy_segment, 272, 335, false, "fairy_segment_5"};
-LogicalSegment fairy_segment_6 = {&fairy_segment, 335, num_fairy_segment_leds, false, "fairy_segment_6"};
+LogicalSegment strip_segment_up = {&strip_segment, 0, 40};
+LogicalSegment strip_segment_over = {&strip_segment, 40, num_strip_segment_leds};
+LogicalSegment dual_segment_up = {&dual_segment, 0, 32, true};
+LogicalSegment dual_segment_window = {&dual_segment, 32, 100, true};
+LogicalSegment dual_segment_right_corner = {&dual_segment, 100, 117};
+LogicalSegment dual_segment_back_ceiling = {&dual_segment, 117, 197};
+LogicalSegment dual_segment_left_ceiling = {&dual_segment, 197, 274};
+LogicalSegment dual_segment_front_ceiling = {&dual_segment, 274, num_dual_segment_leds, false};
+LogicalSegment fairy_segment_up = {&fairy_segment, 0, 26};
+// ceiling length segments
+LogicalSegment fairy_segment_1 = {&fairy_segment, 26, 87};
+LogicalSegment fairy_segment_2 = {&fairy_segment, 87, 148};
+LogicalSegment fairy_segment_3 = {&fairy_segment, 148, 210};
+LogicalSegment fairy_segment_4 = {&fairy_segment, 210, 272};
+LogicalSegment fairy_segment_5 = {&fairy_segment, 272, 335};
+LogicalSegment fairy_segment_6 = {&fairy_segment, 335, num_fairy_segment_leds};
+// arc length segments
+LogicalSegment fairy_segment_arc_1 = {&fairy_segment, 26, 49};
+LogicalSegment fairy_segment_arc_2 = {&fairy_segment, 49, 65};
+LogicalSegment fairy_segment_arc_3 = {&fairy_segment, 65, 87};
+LogicalSegment fairy_segment_arc_4 = {&fairy_segment, 87, 107};
+LogicalSegment fairy_segment_arc_5 = {&fairy_segment, 107, 124};
+LogicalSegment fairy_segment_arc_6 = {&fairy_segment, 124, 148};
+LogicalSegment fairy_segment_arc_7 = {&fairy_segment, 148, 171};
+LogicalSegment fairy_segment_arc_8 = {&fairy_segment, 171, 190};
+LogicalSegment fairy_segment_arc_9 = {&fairy_segment, 190, 210};
+LogicalSegment fairy_segment_arc_10 = {&fairy_segment, 210, 231};
+LogicalSegment fairy_segment_arc_11 = {&fairy_segment, 231, 250};
+LogicalSegment fairy_segment_arc_12 = {&fairy_segment, 250, 272};
+LogicalSegment fairy_segment_arc_13 = {&fairy_segment, 272, 294};
+LogicalSegment fairy_segment_arc_14 = {&fairy_segment, 294, 314};
+LogicalSegment fairy_segment_arc_15 = {&fairy_segment, 314, 335};
+LogicalSegment fairy_segment_arc_16 = {&fairy_segment, 335, 356};
+LogicalSegment fairy_segment_arc_17 = {&fairy_segment, 356, 376};
+LogicalSegment fairy_segment_arc_18 = {&fairy_segment, 376, num_fairy_segment_leds};
 
 #pragma endregion LogicalSegment
 
@@ -68,11 +90,13 @@ struct LogicalSegmentGroup {
   LogicalSegment **logical_segments;
   int num_segments;
 };
-LogicalSegment *strip_right_segments[6] = {&strip_segment_over, &dual_segment_right_corner};
+LogicalSegment *strip_right_segments[2] = {&strip_segment_over, &dual_segment_right_corner};
 LogicalSegment *strip_segments[6] = {&strip_segment_up, &strip_segment_over, &dual_segment_right_corner, &dual_segment_back_ceiling, &dual_segment_left_ceiling, &dual_segment_front_ceiling};
 LogicalSegment *strip_ceiling_segments[5] = {&strip_segment_over, &dual_segment_right_corner, &dual_segment_back_ceiling, &dual_segment_left_ceiling, &dual_segment_front_ceiling};
 LogicalSegment *fairy_segments[8] = {&dual_segment_up, &dual_segment_window, &fairy_segment_1, &fairy_segment_2, &fairy_segment_3, &fairy_segment_4, &fairy_segment_5, &fairy_segment_6};
+LogicalSegment *fairy_window_segments[2] = {&dual_segment_up, &dual_segment_window};
 LogicalSegment *fairy_ceiling_segments[6] = {&fairy_segment_1, &fairy_segment_2, &fairy_segment_3, &fairy_segment_4, &fairy_segment_5, &fairy_segment_6};
+LogicalSegment *fairy_long_segments[7] = {&fairy_segment_up, &fairy_segment_1, &fairy_segment_2, &fairy_segment_3, &fairy_segment_4, &fairy_segment_5, &fairy_segment_6};
 LogicalSegment *all_segments[15] = {&strip_segment_up,
                                     &strip_segment_over,
                                     &dual_segment_up,
@@ -88,11 +112,14 @@ LogicalSegment *all_segments[15] = {&strip_segment_up,
                                     &fairy_segment_4,
                                     &fairy_segment_5,
                                     &fairy_segment_6};
-LogicalSegmentGroup strip_right_group = {strip_right_segments, 6};
+
+LogicalSegmentGroup strip_right_group = {strip_right_segments, 2};
+LogicalSegmentGroup strip_ceiling_group = {strip_ceiling_segments, 5};
 LogicalSegmentGroup strip_group = {strip_segments, 6};
-LogicalSegmentGroup strip_ceiling_group = {strip_segments, 5};
-LogicalSegmentGroup fairy_group = {fairy_segments, 8};
 LogicalSegmentGroup fairy_ceiling_group = {fairy_ceiling_segments, 6};
+LogicalSegmentGroup fairy_long_group = {fairy_long_segments, 7};
+LogicalSegmentGroup fairy_window_group = {fairy_window_segments, 2};
+LogicalSegmentGroup fairy_group = {fairy_segments, 8};
 LogicalSegmentGroup all_group = {all_segments, 15};
 
 #pragma endregion LogicalSegmentGroup
@@ -108,8 +135,13 @@ typedef void (*SequenceGroupSideEffect)();
 // apply this light function to either a segment or a group, other one is nullptr
 // both being nullptr indicate all lights
 struct LightSequence {
-  LightSequence(LightFunction a, LogicalSegment *b = nullptr, LogicalSegmentGroup *c = nullptr, bool d = true, bool e = false)
-      : light_function(a), logical_segment(b), logical_segment_group(c), clear_first(d), spread_function_over_group(e) {}
+  LightSequence(LightFunction _light_function, LogicalSegment *_logical_segment = nullptr, LogicalSegmentGroup *_logical_segment_group = nullptr, bool _clear_first = true,
+                bool _spread_function_over_group = false)
+      : light_function(_light_function),
+        logical_segment(_logical_segment),
+        logical_segment_group(_logical_segment_group),
+        clear_first(_clear_first),
+        spread_function_over_group(_spread_function_over_group) {}
   LightFunction light_function;
   LogicalSegment *logical_segment;
   LogicalSegmentGroup *logical_segment_group;
@@ -119,19 +151,21 @@ struct LightSequence {
 
 struct LightSequenceGroup {
   LightSequenceGroup(
-      LightSequence **a, int b = 1, int c = 1000, SequenceGroupSideEffect d = []() {}, bool e = true)
-      : sequences(a), num_sequences(b), duration(c), side_effect(d), clear_first(e) {}
+      LightSequence **_sequences, int _num_sequences = 1, int _duration = 1000, bool _clear_first = true, SequenceGroupSideEffect _on_loop = []() {},
+      SequenceGroupSideEffect _on_enter = []() {})
+      : sequences(_sequences), num_sequences(_num_sequences), duration(_duration), clear_first(_clear_first), on_loop(_on_loop), on_enter(_on_enter) {}
   LightSequence **sequences;
   int num_sequences;
   int duration;  // ms
-  SequenceGroupSideEffect side_effect;
   bool clear_first;
+  SequenceGroupSideEffect on_loop;
+  SequenceGroupSideEffect on_enter;
 };
 
 struct LightProgram {
+  LightProgram(LightSequenceGroup **_light_sequence_groups, int _num_groups = 1) : light_sequence_groups(_light_sequence_groups), num_groups(_num_groups) {}
   LightSequenceGroup **light_sequence_groups;
   int num_groups;
-  const char *name;
 };
 
 #pragma endregion LightProgram
@@ -147,13 +181,16 @@ LightSequenceGroup *reset_groups[] = {&reset_group};
 void rainbow(CRGB *leds, int count) { fill_rainbow(leds, count, counter, program_parameter_x % 6 * 4 - 12 + 13); }
 LightSequence rainbow_sequence = {&rainbow, nullptr, nullptr, true};
 LightSequence *rainbow_sequences[] = {&rainbow_sequence};
-LightSequenceGroup rainbow_group = {rainbow_sequences, 1, 1000, []() { counter += (program_parameter_y % 10 - 5) * 10; }, true};
+LightSequenceGroup rainbow_group = {rainbow_sequences, 1, 1000000, true, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
 LightSequenceGroup *rainbow_groups[] = {&rainbow_group};
 
 void red(CRGB *leds, int count) { fill_solid(leds, count, CRGB::Red); }
 void green(CRGB *leds, int count) { fill_solid(leds, count, CRGB::Green); }
 void blue(CRGB *leds, int count) { fill_solid(leds, count, CRGB::Blue); }
 void white(CRGB *leds, int count) { fill_solid(leds, count, CRGB::White); }
+void yellow(CRGB *leds, int count) { fill_solid(leds, count, CRGB::Yellow); }
+void pink(CRGB *leds, int count) { fill_solid(leds, count, CRGB::Coral); }
+void orange(CRGB *leds, int count) { fill_solid(leds, count, CRGB::OrangeRed); }
 LightSequence red_sequence = {&red, nullptr, nullptr, true};
 LightSequence green_sequence = {&green, nullptr, nullptr, true};
 LightSequence blue_sequence = {&blue, nullptr, nullptr, true};
@@ -169,6 +206,85 @@ LightSequenceGroup white_group = {white_sequences, 1, 500};
 LightSequenceGroup *rgbw_groups[] = {&red_group, &green_group, &blue_group, &white_group};
 
 #pragma endregion simple_programs
+
+// s is strip, f is fairy, w is window
+
+// halloween party program
+// ceiling fairy lights
+LightSequence halloween_f1 = {&orange, &fairy_segment_arc_1, nullptr, false};
+LightSequence halloween_f2 = {&yellow, &fairy_segment_arc_2, nullptr, false};
+LightSequence halloween_f3 = {&white, &fairy_segment_arc_3, nullptr, false};
+LightSequence halloween_f4 = {&white, &fairy_segment_arc_4, nullptr, false};
+LightSequence halloween_f5 = {&yellow, &fairy_segment_arc_5, nullptr, false};
+LightSequence halloween_f6 = {&orange, &fairy_segment_arc_6, nullptr, false};
+LightSequence halloween_f7 = {&orange, &fairy_segment_arc_7, nullptr, false};
+LightSequence halloween_f8 = {&yellow, &fairy_segment_arc_8, nullptr, false};
+LightSequence halloween_f9 = {&white, &fairy_segment_arc_9, nullptr, false};
+LightSequence halloween_f10 = {&white, &fairy_segment_arc_10, nullptr, false};
+LightSequence halloween_f11 = {&yellow, &fairy_segment_arc_11, nullptr, false};
+LightSequence halloween_f12 = {&orange, &fairy_segment_arc_12, nullptr, false};
+LightSequence halloween_f13 = {&orange, &fairy_segment_arc_13, nullptr, false};
+LightSequence halloween_f14 = {&yellow, &fairy_segment_arc_14, nullptr, false};
+LightSequence halloween_f15 = {&white, &fairy_segment_arc_15, nullptr, false};
+LightSequence halloween_f16 = {&white, &fairy_segment_arc_16, nullptr, false};
+LightSequence halloween_f17 = {&yellow, &fairy_segment_arc_17, nullptr, false};
+LightSequence halloween_f18 = {&orange, &fairy_segment_arc_18, nullptr, false};
+// strip lights
+
+static int grow_base = 0;
+static int grow_delta_time = 30;
+void grow_orange(CRGB *leds, int count) {
+  orange(leds, count);
+  int num_lit = (counter - grow_base) / grow_delta_time;
+  if (num_lit >= count - 2) num_lit = count;
+  fill_solid(leds + num_lit, count - num_lit, CRGB::Black);
+}
+LightSequence halloween_grow1 = {&grow_orange, &strip_segment_up, nullptr, false};
+LightSequence halloween_grow2 = {&grow_orange, &strip_segment_over, nullptr, false};
+LightSequence halloween_grow3 = {&grow_orange, &dual_segment_right_corner, nullptr, false};
+LightSequence halloween_grow4 = {&grow_orange, &dual_segment_back_ceiling, nullptr, false};
+LightSequence halloween_grow5 = {&grow_orange, &dual_segment_left_ceiling, nullptr, false};
+LightSequence halloween_grow6 = {&grow_orange, &dual_segment_front_ceiling, nullptr, false};
+LightSequence halloween_reset = {&black, nullptr, &strip_group, false};
+
+LightSequence *halloween_static_fairy[] = {&halloween_f1,  &halloween_f2,  &halloween_f3,  &halloween_f4,  &halloween_f5,  &halloween_f6,  &halloween_f7,  &halloween_f8,  &halloween_f9,
+                                           &halloween_f10, &halloween_f11, &halloween_f12, &halloween_f13, &halloween_f14, &halloween_f15, &halloween_f16, &halloween_f17, &halloween_f18};
+LightSequence *halloween_grow_list1[] = {&halloween_grow1};
+LightSequence *halloween_grow_list2[] = {&halloween_grow2};
+LightSequence *halloween_grow_list3[] = {&halloween_grow3};
+LightSequence *halloween_grow_list4[] = {&halloween_grow4};
+LightSequence *halloween_grow_list5[] = {&halloween_grow5};
+LightSequence *halloween_grow_list6[] = {&halloween_grow6};
+LightSequence *halloween_grow_reset[] = {&halloween_reset};
+
+LightSequenceGroup halloween_static_fairy_group = {halloween_static_fairy, 18, 200, false};
+LightSequenceGroup halloween_grow_group1 = {halloween_grow_list1, 1, (strip_segment_up.end - strip_segment_up.start) * grow_delta_time, false, []() {}, []() { grow_base = counter; }};
+LightSequenceGroup halloween_grow_group2 = {halloween_grow_list2, 1, (strip_segment_over.end - strip_segment_over.start) * grow_delta_time, false, []() {}, []() { grow_base = counter; }};
+LightSequenceGroup halloween_grow_group3 = {halloween_grow_list3,         1, (dual_segment_right_corner.end - dual_segment_right_corner.start) * grow_delta_time, false, []() {},
+                                            []() { grow_base = counter; }};
+LightSequenceGroup halloween_grow_group4 = {halloween_grow_list4,         1, (dual_segment_back_ceiling.end - dual_segment_back_ceiling.start) * grow_delta_time, false, []() {},
+                                            []() { grow_base = counter; }};
+LightSequenceGroup halloween_grow_group5 = {halloween_grow_list5,         1, (dual_segment_left_ceiling.end - dual_segment_left_ceiling.start) * grow_delta_time, false, []() {},
+                                            []() { grow_base = counter; }};
+LightSequenceGroup halloween_grow_group6 = {halloween_grow_list6,         1, (dual_segment_front_ceiling.end - dual_segment_front_ceiling.start) * grow_delta_time, false, []() {},
+                                            []() { grow_base = counter; }};
+LightSequenceGroup halloween_grow_group_reset = {halloween_grow_reset, 1, 100, false};
+LightSequenceGroup *halloween_groups[] = {&halloween_static_fairy_group, &halloween_grow_group1, &halloween_grow_group2, &halloween_grow_group3,
+                                          &halloween_grow_group4,        &halloween_grow_group5, &halloween_grow_group6, &halloween_grow_group_reset};
+
+// all pink program
+LightSequence pink_sequence = {&pink};
+LightSequence *pink_sequences[] = {&pink_sequence};
+LightSequenceGroup pink_group = {pink_sequences};
+LightSequenceGroup *pink_groups[] = {&pink_group};
+
+// tricolor program
+LightSequence tricolor_s = {&pink, nullptr, &strip_group};
+LightSequence tricolor_f = {&blue, nullptr, &fairy_long_group};
+LightSequence tricolor_w = {&yellow, nullptr, &fairy_window_group};
+LightSequence *tricolor_sequences[] = {&tricolor_s, &tricolor_f, &tricolor_w};
+LightSequenceGroup tricolor_group = {tricolor_sequences, 3};
+LightSequenceGroup *tricolor_groups[] = {&tricolor_group};
 
 #pragma region debug
 
@@ -238,9 +354,10 @@ LightSequenceGroup debug_group17 = {debug_sequences17};
 LightSequenceGroup debug_group18 = {debug_sequences18};
 LightSequenceGroup debug_group19 = {debug_sequences19};
 LightSequenceGroup debug_group20 = {debug_sequences20};
-LightSequenceGroup *debug_groups[] = {&debug_group1,  &debug_group2,  &debug_group3,  &debug_group4,  &debug_group5,  &debug_group6,  &debug_group7,
-                                      &debug_group8,  &debug_group9,  &debug_group10, &debug_group11, &debug_group12, &debug_group13, &debug_group14,
-                                      &debug_group15, &debug_group16, &debug_group17, &debug_group18, &debug_group19, &debug_group20};
+LightSequenceGroup *debug_groups[] = {&debug_group1, &debug_group6, &debug_group16};
+// LightSequenceGroup *debug_groups[] = {&debug_group1,  &debug_group2,  &debug_group3,  &debug_group4,  &debug_group5,  &debug_group6,  &debug_group7,
+//                                       &debug_group8,  &debug_group9,  &debug_group10, &debug_group11, &debug_group12, &debug_group13, &debug_group14,
+//                                       &debug_group15, &debug_group16, &debug_group17, &debug_group18, &debug_group19, &debug_group20};
 
 #pragma endregion debug
 
@@ -327,10 +444,10 @@ void pacifica(CRGB *leds, int count) {
 
   // Render each of four layers, with different scales and speeds, that vary
   // over time
-  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_1 : pacifica_palette_alt_1, sCIStart1, beatsin16(3, 11 * 256, 14 * 256), beatsin8(10, 70, 130), 0 - beat16(301));
-  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_2 : pacifica_palette_alt_2, sCIStart2, beatsin16(4, 6 * 256, 9 * 256), beatsin8(17, 40, 80), beat16(401));
-  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_3 : pacifica_palette_alt_3, sCIStart3, 6 * 256, beatsin8(9, 10, 38), 0 - beat16(503));
-  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_3 : pacifica_palette_alt_3, sCIStart4, 5 * 256, beatsin8(8, 10, 28), beat16(601));
+  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_alt_1 : pacifica_palette_1, sCIStart1, beatsin16(3, 11 * 256, 14 * 256), beatsin8(10, 70, 130), 0 - beat16(301));
+  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_alt_2 : pacifica_palette_2, sCIStart2, beatsin16(4, 6 * 256, 9 * 256), beatsin8(17, 40, 80), beat16(401));
+  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_alt_3 : pacifica_palette_3, sCIStart3, 6 * 256, beatsin8(9, 10, 38), 0 - beat16(503));
+  pacifica_one_layer(leds, count, program_parameter_x % 2 ? pacifica_palette_alt_3 : pacifica_palette_3, sCIStart4, 5 * 256, beatsin8(8, 10, 28), beat16(601));
 
   // Add brighter 'whitecaps' where the waves lines up more
   pacifica_add_whitecaps(leds, count);
@@ -353,7 +470,7 @@ void rainbow_glitter(CRGB *leds, int count) {
 }
 LightSequence rainbow_glitter_sequence = {&rainbow_glitter, nullptr, nullptr, true};
 LightSequence *rainbow_glitter_sequences[] = {&rainbow_glitter_sequence};
-LightSequenceGroup rainbow_glitter_group = {rainbow_glitter_sequences, 1, 1000, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
+LightSequenceGroup rainbow_glitter_group = {rainbow_glitter_sequences, 1, 1000, true, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
 LightSequenceGroup *rainbow_glitter_groups[] = {&rainbow_glitter_group};
 
 void confetti(CRGB *leds, int count) {
@@ -365,7 +482,7 @@ void confetti(CRGB *leds, int count) {
 
 LightSequence confetti_sequence = {&confetti, nullptr, nullptr, true};
 LightSequence *confetti_sequences[] = {&confetti_sequence};
-LightSequenceGroup confetti_group = {confetti_sequences, 1, 1000, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
+LightSequenceGroup confetti_group = {confetti_sequences, 1, 1000, true, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
 LightSequenceGroup *confetti_groups[] = {&confetti_group};
 
 void sinelon(CRGB *leds, int count) {
@@ -377,7 +494,7 @@ void sinelon(CRGB *leds, int count) {
 
 LightSequence sinelon_sequence = {&sinelon, nullptr, nullptr, true};
 LightSequence *sinelon_sequences[] = {&sinelon_sequence};
-LightSequenceGroup sinelon_group = {sinelon_sequences, 1, 1000, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
+LightSequenceGroup sinelon_group = {sinelon_sequences, 1, 1000, true, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
 LightSequenceGroup *sinelon_groups[] = {&sinelon_group};
 
 void bpm(CRGB *leds, int count) {
@@ -392,7 +509,7 @@ void bpm(CRGB *leds, int count) {
 
 LightSequence bpm_sequence = {&bpm, nullptr, nullptr, true};
 LightSequence *bpm_sequences[] = {&bpm_sequence};
-LightSequenceGroup bpm_group = {bpm_sequences, 1, 1000, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
+LightSequenceGroup bpm_group = {bpm_sequences, 1, 1000, true, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
 LightSequenceGroup *bpm_groups[] = {&bpm_group};
 
 void juggle(CRGB *leds, int count) {
@@ -407,14 +524,13 @@ void juggle(CRGB *leds, int count) {
 
 LightSequence juggle_sequence = {&juggle, nullptr, nullptr, true};
 LightSequence *juggle_sequences[] = {&juggle_sequence};
-LightSequenceGroup juggle_group = {juggle_sequences, 1, 1000, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
+LightSequenceGroup juggle_group = {juggle_sequences, 1, 1000, true, []() { counter += (program_parameter_y % 10 - 5) * 10; }};
 LightSequenceGroup *juggle_groups[] = {&juggle_group};
 
-#define num_programs 9
+#define num_programs 12
 LightProgram programs[num_programs] = {
-    {rainbow_groups, 1, "rainbow"},   {pacifica_groups, 1, "pacifica"}, {rainbow_glitter_groups, 1, "glitter"},
-    {confetti_groups, 1, "confetti"}, {sinelon_groups, 1, "sinelon"},   {bpm_groups, 1, "bpm"},
-    {juggle_groups, 1, "juggle"},     {rgbw_groups, 4, "rgbw"},         {debug_groups, 20, "debug"},
+    {halloween_groups, 8}, {tricolor_groups}, {rainbow_groups}, {pacifica_groups}, {rainbow_glitter_groups}, {confetti_groups}, {sinelon_groups},
+    {bpm_groups},          {juggle_groups},   {rgbw_groups, 4}, {pink_groups},     {debug_groups, 3},
 };
 
 #pragma region Button
@@ -446,7 +562,7 @@ Button buttons[4] = {
        program_parameter_x = 0;
        program_parameter_y = 0;
        counter = 0;
-       Serial.println(programs[current_program].name);
+       Serial.println(current_program);
      }},
     {1, false,
      []() {
@@ -476,21 +592,19 @@ void setup() {
 }
 
 void process_logical_segment(LightFunction light_function, LogicalSegment *logical_segment, bool clear_first) {
-  if (verbosity >= 2) {
-    Serial.print("writing to logical segment: ");
-    Serial.print(clear_first);
-    Serial.print(logical_segment->name);
-    Serial.print("physical segment: ");
-    Serial.print(logical_segment->physical_segment->name);
-    Serial.print(" ");
-    Serial.print(logical_segment->start);
-    Serial.print(" ");
-    Serial.println(logical_segment->end - logical_segment->start);
-  }
   if (clear_first) {
     black(logical_segment->physical_segment->leds + logical_segment->start, logical_segment->end - logical_segment->start);
   }
   light_function(logical_segment->physical_segment->leds + logical_segment->start, logical_segment->end - logical_segment->start);
+  // if (logical_segment->color_shift.r != 0 || logical_segment->color_shift.g != 0 || logical_segment->color_shift.b != 0) {
+  if (logical_segment == &dual_segment_front_ceiling) {
+    for (int i = num_dual_segment_leds - 58; i < num_dual_segment_leds; i++) {
+      CRGB &color = logical_segment->physical_segment->leds[i];
+      color.r *= 0.5;
+      color.g *= 0.5;
+      color.b *= 0.5;
+    }
+  }
   if (logical_segment->pixel_shift) {
     for (int i = logical_segment->start; i < logical_segment->end; i++) {
       CRGB &color = logical_segment->physical_segment->leds[i];
@@ -502,33 +616,34 @@ void process_logical_segment(LightFunction light_function, LogicalSegment *logic
   }
 }
 
+static int last_group = -1;
 void loop() {
   LightProgram &program = programs[current_program];
   if (verbosity >= 1) {
-    Serial.print("in loop running lighting program: ");
-    Serial.print(program.name);
-    Serial.print(" num groups: ");
-    Serial.println(program.num_groups);
-    Serial.print("ct: ");
-    Serial.print(counter);
-    Serial.print("   ");
   }
+
   LightSequenceGroup *group = program.light_sequence_groups[program.num_groups - 1];
   int program_time = 0;
   for (int i = 0; i < program.num_groups; i++) {
     program_time += program.light_sequence_groups[i]->duration;
-    if (program_time <= counter) {
-      group = program.light_sequence_groups[i];
+  }
+  int current_program_time = 0;
+  int current_group = 0;
+  while (current_group < program.num_groups) {
+    current_program_time += program.light_sequence_groups[current_group]->duration;
+    if (current_program_time > counter % program_time) {
+      break;
     }
+    current_group++;
   }
-  if (counter > program_time) {
-    counter = 0;
+  current_group = current_group % program.num_groups;
+  group = program.light_sequence_groups[current_group];
+  if (last_group != current_group) {
+    last_group = current_group;
+    group->on_enter();
   }
-  if (verbosity >= 1) {
-    Serial.print(" program total duration: ");
-    Serial.println(program_time);
-  }
-  group->side_effect();
+  group->on_loop();
+
   if (group->clear_first) {
     for (int i = 0; i < all_group.num_segments; i++) {
       process_logical_segment(black, all_group.logical_segments[i], true);
